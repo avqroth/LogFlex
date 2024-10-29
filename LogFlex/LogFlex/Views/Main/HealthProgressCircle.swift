@@ -20,13 +20,6 @@ struct HealthProgressCircle: View {
     let mainColor = Color.main
     let secondaryColor = Color.backup
 
-    private let gradient = AngularGradient(
-        gradient: Gradient(colors: [.main, .backup]),
-        center: .center,
-        startAngle: .degrees(0),
-        endAngle: .degrees(360)
-    )
-
     var body: some View {
         ZStack {
             Circle()
@@ -36,7 +29,7 @@ struct HealthProgressCircle: View {
 
             Circle()
                 .trim(from: 0.0, to: CGFloat(min(healthKitManager.progress, 1.0)))
-                .stroke(gradient, style: StrokeStyle(lineWidth: 25, lineCap: .round))
+                .stroke(Color.accent, style: StrokeStyle(lineWidth: 25, lineCap: .round))
                 .frame(width: 250)
                 .rotationEffect(.degrees(-90))
                 .animation(.linear, value: healthKitManager.progress)
@@ -47,11 +40,11 @@ struct HealthProgressCircle: View {
                     .foregroundColor(secondaryColor)
                     .font(.system(size: 30))
 
-                Text("\(healthKitManager.stepCount)")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                Text("\(healthKitManager.stepCount)/10,000")
+                    .font(.system(size: 30, weight: .bold, design: .rounded))
                 Text("Today")
                     .font(.system(.body, design: .rounded))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.backup)
             }
         }
         .onAppear {

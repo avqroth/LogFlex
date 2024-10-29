@@ -10,12 +10,12 @@ import SwiftData
 
 @main
 struct LogFlexApp: App {
-    @StateObject private var healthKit = HealthKitManager()
+    @StateObject private var healthKitManager = HealthKitManager()
 
     var body: some Scene {
         WindowGroup {
             ContentView()
-                .environmentObject(healthKit)
+                .environmentObject(healthKitManager)
         }
     }
 }

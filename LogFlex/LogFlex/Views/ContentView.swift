@@ -42,9 +42,8 @@ struct ContentView: View {
                     Label("Profile", systemImage: "person")
                         .font(.custom("Avenir.bold", size: 22))
                 }
-
-            Text("Hello")
         }
+        .accentColor(Color.main)
     }
 
 }

@@ -16,16 +16,16 @@ struct AddWorkoutView: View {
     var body: some View {
         ScrollView {
             HStack {
-                Text("Today's Workout")
+                Text("Add Workout")
                     .font(.largeTitle)
                     .padding(.top, 35)
-                    .padding(.trailing, 100)
+                    .padding(.trailing, 150)
             }
             HStack {
-                Text("What did we do today?")
+                Text("Workout Type")
                     .font(.headline)
-                    .padding(.top, 1)
-                    .padding(.trailing, 160)
+                    .padding(.top, 30)
+                    .padding(.trailing, 230)
             }
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack {
@@ -41,7 +41,7 @@ struct AddWorkoutView: View {
                 VStack {
                     Rectangle()
                         .frame(width: 350, height: 200)
-                        .foregroundStyle(mainColor)
+                        .foregroundStyle(.white)
                         .clipShape(.rect(cornerRadius: 35))
 
 

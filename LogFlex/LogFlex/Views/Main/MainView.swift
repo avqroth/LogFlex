@@ -53,20 +53,19 @@ import SwiftUI
 
 struct MainView: View {
     @EnvironmentObject var healthKitManager: HealthKitManager
+    @StateObject private var circleViewModel = CircleViewModel()
     @State private var greeting: String = ""
     @State private var progress: Double = 0.0
     @State private var steps: Int = 0
     @StateObject private var viewModel = CircleViewModel()
-
+    
     var body: some View {
         ScrollView {
             Text(greeting)
                 .font(.largeTitle)
-                .font(.largeTitle)
                 .padding(.top, 35)
-                .padding(.trailing, 100)
                 .onAppear(perform: updateGreeting)
-                .padding(.top, 25)
+                .padding(.top, 15)
 
             Spacer(minLength: 50)
             
@@ -74,20 +73,55 @@ struct MainView: View {
                 HealthProgressCircle(healthKitManager: healthKitManager)
             }
             .padding()
-
+            
             HStack {
-                ForEach(viewModel.circleData) { circle in
-                    CircleView(data: circle)
+                ForEach(circleViewModel.circleData) { circleData in
+                    CircleView(data: circleData)
                 }
+            }.padding(.bottom, 50)
+
+            VStack {
+                Text("Most Recent Workout")
+                    .font(.headline)
+                    .padding(.trailing, 150)
+
+                Rectangle()
+                    .frame(width: 350, height: 150)
+                    .foregroundStyle(Color.gray.opacity(0.2))
+                    .clipShape(.rect(cornerRadius: 35))
+                    .padding(.bottom, 25)
+
+                Text("Goal History")
+                    .font(.headline)
+                    .padding(.trailing, 225)
+
+                Rectangle()
+                    .frame(width: 350, height: 150)
+                    .foregroundStyle(Color.gray.opacity(0.2))
+                    .clipShape(.rect(cornerRadius: 35))
+                    .padding(.bottom, 25)
             }
         }
         .onAppear {
             healthKitManager.fetchTodaySteps()
+            healthKitManager.fetchTodayCalories()
         }
+        .onChange(of: healthKitManager.caloriesBurned) { newValue, oldValue in
+                    circleViewModel.updateCalories(newValue)
+                    print("Calories burned changed from \(oldValue) to \(newValue)")
+                }
+        .onChange(of: healthKitManager.milesWalked) { newValue, oldValue in
+            circleViewModel.updateMiles(newValue)
+                    print("Miles changed from \(oldValue) to \(newValue)")
+                }
+        .onChange(of: healthKitManager.heartRate) {
+                    circleViewModel.updateHeartRate(healthKitManager.heartRate)
+                    print("Heart rate updated to \(healthKitManager.heartRate)")
+                }
     }
     private func updateGreeting() {
         let hour = Calendar.current.component(.hour, from: Date())
-
+        
         switch hour {
         case 0..<12:
             greeting = "Good Morning!"
