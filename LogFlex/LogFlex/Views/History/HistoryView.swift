@@ -1,15 +1,23 @@
 //
-//  HistoryView.swift
+//  History.swift
 //  LogFlex
 //
-//  Created by Avery Roth on 9/24/24.
+//  Created by Avery Roth on 12/18/24.
 //
 
 import SwiftUI
 
 struct HistoryView: View {
     var body: some View {
-        Text("History")
+        NavigationStack {
+            ScrollView {
+                CalendarView()
+                    .padding(.top)
+                    .padding(.leading, 25)
+                    .padding(.trailing, 25)
+            }
+            .navigationTitle("History")
+        }
     }
 }
 

@@ -19,11 +19,15 @@ class HealthKitManager: ObservableObject {
     let healthStore = HKHealthStore()
     @Published var stepCount: Int = 0
     @Published var progress: Double = 0.0
-    @Published var caloriesBurned: Double = 0
+    @Published var caloriesBurned: Double = 0.0
     @Published var caloriesProgress: Double = 0.0
     @Published var milesWalked: Double = 0.0
     @Published var milesProgress: Double = 0.0
     @Published var heartRate: Double = 0.0
+    @Published var activeWorkoutDistance: Double = 0
+    @Published var isTrackingWorkout = false
+    private var workoutSession: HKWorkoutSession?
+    private var distanceQuery: HKQuery?
     let goalSteps: Int = 10000
     let goalMiles: Double = 10
     let goalCalories: Double = 500
@@ -71,38 +75,57 @@ class HealthKitManager: ObservableObject {
         healthStore.execute(query)
     }
     
+    
     func fetchTodayCalories() {
         let calories = HKQuantityType(.activeEnergyBurned)
         let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
-        
-        let query = HKStatisticsQuery(quantityType: calories, quantitySamplePredicate: predicate) { [weak self] _, result, error in
+        let query = HKStatisticsQuery(
+            quantityType: calories,
+            quantitySamplePredicate: predicate,
+            options: .cumulativeSum
+        ) { [weak self] _, result, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                guard let quantity = result?.sumQuantity(), error == nil else {
-                    print("Error fetching calories: \(error?.localizedDescription ?? "Unknown error")")
+                
+                if let error = error {
+                    print("Error fetching calories: \(error.localizedDescription)")
                     return
                 }
-                self.caloriesBurned = quantity.doubleValue(for: .kilocalorie())
-                self.caloriesProgress = min(self.caloriesBurned / self.goalMiles, 1.0)
-                print("Calories: \(self.caloriesBurned.formattedString())")
+                
+                guard let sum = result?.sumQuantity() else {
+                    print("No calories data available")
+                    return
+                }
+                
+                let calorieUnit = HKUnit.kilocalorie()
+                self.caloriesBurned = sum.doubleValue(for: calorieUnit)
+                print("Total Calories Burned Today: \(self.caloriesBurned)")
             }
         }
+        
         healthStore.execute(query)
     }
+    
+    
     
     func fetchMiles() {
         let miles = HKQuantityType(.distanceWalkingRunning)
         let predicate = HKQuery.predicateForSamples(withStart: .startOfDay, end: Date())
-        let query = HKStatisticsQuery(quantityType: miles, quantitySamplePredicate: predicate) { [weak self] _, result, error in
+        let query = HKStatisticsQuery(quantityType: miles, quantitySamplePredicate: predicate, options: .cumulativeSum)
+        { [weak self] _, result, error in
             DispatchQueue.main.async {
                 guard let self = self else { return }
-                guard let quantity = result?.sumQuantity(), error == nil else {
-                    print("Error fetching miles: \(error?.localizedDescription ?? "Unknown error")")
+                if let error = error {
+                    print("Error fetching calories: \(error.localizedDescription)")
                     return
                 }
-                self.milesWalked = quantity.doubleValue(for: .mile())
-                self.milesProgress = min(self.caloriesBurned / self.goalMiles, 1.0)
-                print("Miles: \(self.milesWalked.formattedString())")
+                guard let sum = result?.sumQuantity() else {
+                    print("No miles data available")
+                    return
+                }
+                let mileUnit = HKUnit.mile()
+                self.milesWalked = sum.doubleValue(for: mileUnit)
+                print("Miles: \(self.milesWalked)")
             }
         }
         healthStore.execute(query)
@@ -127,7 +150,66 @@ class HealthKitManager: ObservableObject {
         }
         healthStore.execute(query)
     }
+    
+    func startWorkoutTracking(for type: HKWorkoutActivityType) {
+        guard let distanceType = distanceTypeFor(workoutType: type) else { return }
+        
+        // Create query to monitor real-time distance
+        let query = HKAnchoredObjectQuery(
+            type: distanceType,
+            predicate: nil,
+            anchor: nil,
+            limit: HKObjectQueryNoLimit
+        ) { [weak self] query, samples, deletedObjects, anchor, error in
+            self?.handleDistanceUpdate(samples)
+        }
+        
+        // Set up updates for the query
+        query.updateHandler = { [weak self] query, samples, deleted, anchor, error in
+            self?.handleDistanceUpdate(samples)
+        }
+        
+        distanceQuery = query
+        healthStore.execute(query)
+        isTrackingWorkout = true
+    }
+    
+    // Add this method to stop tracking
+    func stopWorkoutTracking() {
+        if let query = distanceQuery {
+            healthStore.stop(query)
+        }
+        isTrackingWorkout = false
+        activeWorkoutDistance = 0
+        distanceQuery = nil
+    }
+    
+    private func handleDistanceUpdate(_ samples: [HKSample]?) {
+        guard let distanceSamples = samples as? [HKQuantitySample] else { return }
+        
+        let totalDistance = distanceSamples.reduce(0.0) { result, sample in
+            result + sample.quantity.doubleValue(for: .meter())
+        }
+        
+        DispatchQueue.main.async {
+            self.activeWorkoutDistance = totalDistance / 1609.34 // Convert to miles
+        }
+    }
+    
+    private func distanceTypeFor(workoutType: HKWorkoutActivityType) -> HKQuantityType? {
+        switch workoutType {
+        case .running, .walking:
+            return HKQuantityType.quantityType(forIdentifier: .distanceWalkingRunning)
+        case .cycling:
+            return HKQuantityType.quantityType(forIdentifier: .distanceCycling)
+        case .swimming:
+            return HKQuantityType.quantityType(forIdentifier: .distanceSwimming)
+        default:
+            return nil
+        }
+    }
 }
+
 
 extension Double {
     func formattedString() -> String {
@@ -137,3 +219,115 @@ extension Double {
         return numberFormatter.string(from: NSNumber(value: self))!
     }
 }
+
+extension HealthKitManager {
+    func fetchSteps(for date: Date, completion: @escaping (Int) -> Void) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startOfDay,
+            end: endOfDay,
+            options: .strictStartDate
+        )
+
+        let query = HKStatisticsQuery(
+            quantityType: HKQuantityType(.stepCount),
+            quantitySamplePredicate: predicate,
+            options: .cumulativeSum
+        ) { _, result, error in
+            guard let result = result,
+                  let sum = result.sumQuantity() else {
+                completion(0)
+                return
+            }
+
+            let steps = Int(sum.doubleValue(for: .count()))
+            completion(steps)
+        }
+
+        healthStore.execute(query)
+    }
+
+    func fetchCalories(for date: Date, completion: @escaping (Double) -> Void) {
+        let calendar = Calendar.current
+        let startOfDay = calendar.startOfDay(for: date)
+        let endOfDay = calendar.date(byAdding: .day, value: 1, to: startOfDay)!
+
+        let predicate = HKQuery.predicateForSamples(
+            withStart: startOfDay,
+            end: endOfDay,
+            options: .strictStartDate
+        )
+
+        let query = HKStatisticsQuery(
+            quantityType: HKQuantityType(.activeEnergyBurned),
+            quantitySamplePredicate: predicate,
+            options: .cumulativeSum
+        ) { _, result, error in
+            guard let result = result,
+                  let sum = result.sumQuantity() else {
+                completion(0)
+                return
+            }
+
+            let calories = sum.doubleValue(for: .kilocalorie())
+            completion(calories)
+        }
+
+        healthStore.execute(query)
+    }
+}
+
+extension HealthKitManager {
+    func fetchWorkoutHeartRate(start: Date, end: Date, completion: @escaping (Int?) -> Void) {
+        let heartRate = HKQuantityType(.heartRate)
+        let predicate = HKQuery.predicateForSamples(withStart: start, end: end)
+        let sortDescriptor = NSSortDescriptor(key: HKSampleSortIdentifierEndDate, ascending: false)
+
+        let query = HKSampleQuery(
+            sampleType: heartRate,
+            predicate: predicate,
+            limit: HKObjectQueryNoLimit,
+            sortDescriptors: [sortDescriptor]
+        ) { _, samples, error in
+            DispatchQueue.main.async {
+                guard let samples = samples as? [HKQuantitySample], error == nil else {
+                    print("Error fetching heart rate: \(error?.localizedDescription ?? "Unknown error")")
+                    completion(nil)
+                    return
+                }
+
+                // Calculate average heart rate
+                let heartRateUnit = HKUnit.count().unitDivided(by: .minute())
+                let heartRates = samples.map { $0.quantity.doubleValue(for: heartRateUnit) }
+
+                if !heartRates.isEmpty {
+                    let averageHeartRate = Int(heartRates.reduce(0, +) / Double(heartRates.count))
+                    completion(averageHeartRate)
+                } else {
+                    completion(nil)
+                }
+            }
+        }
+        healthStore.execute(query)
+    }
+}
+
+extension HealthKitManager {
+    var currentStepGoal: Int {
+        get {
+            UserDefaults.standard.integer(forKey: "DailyStepGoal") == 0 ? 10000 : UserDefaults.standard.integer(forKey: "DailyStepGoal")
+        }
+    }
+
+    func updateStepGoal(_ newGoal: Int) {
+        UserDefaults.standard.set(newGoal, forKey: "DailyStepGoal")
+        // Recalculate progress with new goal
+        self.progress = Double(self.stepCount) / Double(newGoal)
+        objectWillChange.send()
+    }
+}
+
+

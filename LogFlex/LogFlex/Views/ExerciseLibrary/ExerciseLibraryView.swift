@@ -9,10 +9,10 @@ import SwiftUI
 
 struct ExerciseLibraryView: View {
     var body: some View {
-        Text("Excersise")
+        ExerciseListView()
     }
 }
 
-#Preview {
-    ExerciseLibraryView()
-}
+//#Preview {
+//    ExerciseLibraryView()
+//}

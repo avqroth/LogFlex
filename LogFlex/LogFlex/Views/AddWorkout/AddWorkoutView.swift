@@ -9,46 +9,50 @@ import SwiftUI
 import Foundation
 
 struct AddWorkoutView: View {
-    let mainColor = Color.main
-    let secondaryColor = Color.backup
-    @StateObject private var viewModel = CapsuleViewModel()
+   @State private var showWorkoutSheet = false
 
-    var body: some View {
-        ScrollView {
-            HStack {
-                Text("Add Workout")
-                    .font(.largeTitle)
-                    .padding(.top, 35)
-                    .padding(.trailing, 150)
-            }
-            HStack {
-                Text("Workout Type")
-                    .font(.headline)
-                    .padding(.top, 30)
-                    .padding(.trailing, 230)
-            }
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack {
-                    ForEach(viewModel.capsuleData) { capsule in
-                        CapsuleView(data: capsule)
-                    }
-                }
-            }.padding(.leading, 10)
+   var body: some View {
+       NavigationStack {
+           ScrollView {
+               VStack(spacing: 0) {
+                   VStack(spacing: 15) {
+                       Button(action: { showWorkoutSheet = true }) {
+                           HStack {
+                               Image(systemName: "plus.circle.fill")
+                                   .font(.title2)
+                               Text("Start Empty Workout")
+                                   .font(.headline)
+                               Spacer()
+                               Image(systemName: "chevron.right")
+                                   .foregroundStyle(.main)
+                           }
+                           .padding()
+                           .background(Color(.systemBackground))
+                           .cornerRadius(12)
+                       }
+                       .foregroundStyle(Color.main)
+                   }
+                   .padding()
+               }
+           }
+           .background(Color(.systemGroupedBackground))
+           .sheet(isPresented: $showWorkoutSheet) {
+               WorkoutNavigationView()
+           }
+           .navigationTitle("Add Workout")
+       }
+   }
+}
 
-            Spacer(minLength: 25)
+struct WorkoutNavigationView: View {
+   @Environment(\.dismiss) private var dismiss
 
-            ZStack {
-                VStack {
-                    Rectangle()
-                        .frame(width: 350, height: 200)
-                        .foregroundStyle(.white)
-                        .clipShape(.rect(cornerRadius: 35))
-
-
-                }
-            }
-        }
-    }
+   var body: some View {
+       NavigationStack {
+           CustomWorkout(showWorkoutSheet: .constant(true))
+               .navigationBarTitleDisplayMode(.inline)
+       }
+   }
 }
 
 #Preview {

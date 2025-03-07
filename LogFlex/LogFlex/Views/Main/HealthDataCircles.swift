@@ -53,11 +53,11 @@ struct CircleView: View {
         VStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .stroke(Color.backup, lineWidth: 5)
+                    .stroke(Color.accent, lineWidth: 3)
                     .frame(width: 75, height: 75)
 
                 Image(systemName: data.systemName)
-                    .foregroundColor(.accent)
+                    .foregroundColor(.main)
                     .font(.system(size: 25))
             }
 

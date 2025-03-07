@@ -17,5 +17,10 @@ struct LogFlexApp: App {
             ContentView()
                 .environmentObject(healthKitManager)
         }
+        .modelContainer(for: [
+            WorkoutLog.self,
+            ExerciseLog.self,
+            WaterLog.self
+        ])
     }
 }

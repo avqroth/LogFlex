@@ -6,50 +6,7 @@
 //
 
 import SwiftUI
-
-//struct MainView: View {
-//    @State private var greeting: String = ""
-//    let sampleWorkoutDays: [WorkoutDay] = (1...30).map { day in
-//            WorkoutDay(day: day, hasWorkout: [1, 3, 5, 7, 10, 12, 15, 18, 20, 22, 25, 28].contains(day))
-//        }
-//
-//    var body: some View {
-//        ScrollView {
-//            VStack {
-//                Text(greeting)
-//                    .font(.custom("Avenir", size: 25))
-//                    .padding(.trailing,150)
-//                    .onAppear(perform: updateGreeting)
-//
-//                Spacer(minLength: 50)
-//
-//                Text("History")
-//                    .padding(.trailing, 250)
-//                WorkoutCalendarView(
-//                    workoutDays: sampleWorkoutDays,
-//                    currentMonth: "September 2024",
-//                    daysInMonth: 30,
-//                    firstWeekday: 0
-//                )
-//                Spacer()
-//
-//            }
-//        }
-//    }
-//
-//    private func updateGreeting() {
-//        let hour = Calendar.current.component(.hour, from: Date())
-//
-//        switch hour {
-//        case 0..<12:
-//            greeting = "Good morning!"
-//        case 12..<17:
-//            greeting = "Good afternoon!"
-//        default:
-//            greeting = "Good evening!"
-//        }
-//    }
-//}
+import SwiftData
 
 struct MainView: View {
     @EnvironmentObject var healthKitManager: HealthKitManager
@@ -57,79 +14,126 @@ struct MainView: View {
     @State private var greeting: String = ""
     @State private var progress: Double = 0.0
     @State private var steps: Int = 0
-    @StateObject private var viewModel = CircleViewModel()
-    
-    var body: some View {
-        ScrollView {
-            Text(greeting)
-                .font(.largeTitle)
-                .padding(.top, 35)
-                .onAppear(perform: updateGreeting)
-                .padding(.top, 15)
 
-            Spacer(minLength: 50)
-            
-            VStack {
-                HealthProgressCircle(healthKitManager: healthKitManager)
-            }
-            .padding()
-            
-            HStack {
-                ForEach(circleViewModel.circleData) { circleData in
-                    CircleView(data: circleData)
-                }
-            }.padding(.bottom, 50)
+    @Query(sort: \WorkoutLog.date, order: .reverse) private var recentWorkouts: [WorkoutLog]
+    @Environment(\.modelContext) private var modelContext
 
-            VStack {
-                Text("Most Recent Workout")
-                    .font(.headline)
-                    .padding(.trailing, 150)
-
-                Rectangle()
-                    .frame(width: 350, height: 150)
-                    .foregroundStyle(Color.gray.opacity(0.2))
-                    .clipShape(.rect(cornerRadius: 35))
-                    .padding(.bottom, 25)
-
-                Text("Goal History")
-                    .font(.headline)
-                    .padding(.trailing, 225)
-
-                Rectangle()
-                    .frame(width: 350, height: 150)
-                    .foregroundStyle(Color.gray.opacity(0.2))
-                    .clipShape(.rect(cornerRadius: 35))
-                    .padding(.bottom, 25)
-            }
-        }
-        .onAppear {
-            healthKitManager.fetchTodaySteps()
-            healthKitManager.fetchTodayCalories()
-        }
-        .onChange(of: healthKitManager.caloriesBurned) { newValue, oldValue in
-                    circleViewModel.updateCalories(newValue)
-                    print("Calories burned changed from \(oldValue) to \(newValue)")
-                }
-        .onChange(of: healthKitManager.milesWalked) { newValue, oldValue in
-            circleViewModel.updateMiles(newValue)
-                    print("Miles changed from \(oldValue) to \(newValue)")
-                }
-        .onChange(of: healthKitManager.heartRate) {
-                    circleViewModel.updateHeartRate(healthKitManager.heartRate)
-                    print("Heart rate updated to \(healthKitManager.heartRate)")
-                }
+    var latestWorkout: WorkoutLog? {
+        recentWorkouts.first
     }
-    private func updateGreeting() {
-        let hour = Calendar.current.component(.hour, from: Date())
-        
-        switch hour {
-        case 0..<12:
-            greeting = "Good Morning!"
-        case 12..<17:
-            greeting = "Good Afternoon!"
-        default:
-            greeting = "Good Evening!"
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Spacer(minLength: 0)
+
+                VStack {
+                    HealthProgressCircle(healthKitManager: healthKitManager)
+                }
+                .padding()
+                .padding(.top)
+                .padding(.bottom, 50)
+
+                VStack(alignment: .leading, spacing: 24) {
+
+                    Text("Heart Rate")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+
+                    currentHeartRateCard
+                        .padding(.horizontal)
+                        .padding(.bottom)
+
+                    Text("Goal History")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+                        .padding(.top)
+
+                    GoalHistoryCard(healthKitManager: healthKitManager)
+                        .padding(.horizontal)
+                        .padding(.bottom)
+
+                    Text("Most Recent Workout")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+
+                    if let workout = latestWorkout {
+                        NavigationLink(destination: DetailedWorkoutView(workout: workout)) {
+                            WorkoutSummaryCard(workout: workout)
+                                .padding(.horizontal)
+                                .padding(.bottom)
+                        }
+                    } else {
+                        EmptyWorkoutCard()
+                            .padding(.horizontal)
+                            .padding(.bottom)
+                    }
+
+                    Text("Water Tracking")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+
+                    WaterTrackingView()
+                        .padding(.horizontal)
+                        .padding(.bottom)
+
+//                    Text("Heart Rate History")
+//                        .font(.title2)
+//                        .fontWeight(.bold)
+//                        .padding(.horizontal)
+
+//                    WorkoutHeartRateGraph()
+//                        .padding(.horizontal)
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 25)
+            }
+            .onAppear {
+                healthKitManager.fetchTodaySteps()
+                healthKitManager.fetchTodayCalories()
+                healthKitManager.fetchHeartRate()
+            }
+            .onChange(of: healthKitManager.caloriesBurned) {
+                circleViewModel.updateCalories(healthKitManager.caloriesBurned)
+            }
+            .onChange(of: healthKitManager.milesWalked) {
+                circleViewModel.updateMiles(healthKitManager.milesWalked)
+            }
+            .onChange(of: healthKitManager.heartRate) {
+                circleViewModel.updateHeartRate(healthKitManager.heartRate)
+            }
+            .navigationTitle("Main")
         }
+    }
+
+    private var currentHeartRateCard: some View {
+        HStack {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("\(Int(healthKitManager.heartRate))")
+                    .font(.system(size: 44, weight: .bold))
+                + Text(" BPM")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+
+                Text("Current Heart Rate")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
+            }
+
+            Spacer()
+
+            Image(systemName: "waveform.path.ecg")
+                .font(.system(size: 44))
+                .foregroundColor(.red)
+        }
+        .padding()
+        .background(Color(UIColor.systemBackground))
+        .clipShape(RoundedRectangle(cornerRadius: 20))
+        .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 5)
     }
 }
 
