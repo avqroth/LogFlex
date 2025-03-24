@@ -13,10 +13,10 @@ struct WorkoutSummaryView: View {
             HStack {
                 Text(workout.name)
                     .font(.headline)
-                    .foregroundStyle(.main)
+                    .foregroundStyle(.accent)
                 Spacer()
                 Image(systemName: "chevron.right")
-                    .foregroundStyle(.main)
+                    .foregroundStyle(.accent)
             }
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)

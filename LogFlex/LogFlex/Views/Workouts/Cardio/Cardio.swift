@@ -215,12 +215,12 @@ struct Cardio: View {
 
         // Create activity metrics
         let metrics = ActivityMetrics(
+            sets: "",
+            reps: "",
+            weight: "",
             distance: String(format: "%.2f", healthManager.activeWorkoutDistance),
             duration: String(format: "%.0f", duration),
-            calories: String(Int(healthManager.caloriesBurned)),
-            sets: "",  // No sets for cardio
-            reps: "",  // No reps for cardio
-            weight: ""
+            calories: String(Int(healthManager.caloriesBurned))
         )
 
         // Create activity data

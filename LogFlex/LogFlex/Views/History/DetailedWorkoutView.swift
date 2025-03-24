@@ -15,12 +15,11 @@ struct DetailedWorkoutView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    // Header Section
                     VStack(spacing: 12) {
                         Text(workout.name)
                             .font(.title)
                             .fontWeight(.bold)
-                            .foregroundStyle(.main)
+                            .foregroundStyle(.accent)
                             .multilineTextAlignment(.center)
 
                         HStack {
@@ -35,12 +34,11 @@ struct DetailedWorkoutView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
 
-                    // Activities Section
                     if !workout.activities.isEmpty {
                         VStack(alignment: .leading, spacing: 16) {
                             Text("Activities")
                                 .font(.headline)
-                                .foregroundStyle(.main)
+                                .foregroundStyle(.accent)
 
                             ForEach(workout.activities) { activity in
                                 ActivityCard(activity: activity)
@@ -53,13 +51,6 @@ struct DetailedWorkoutView: View {
             }
             .navigationTitle("Workout Details")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
         }
     }
 }
@@ -107,9 +98,17 @@ struct ActivityCard: View {
                             .font(.subheadline)
                             .fontWeight(.medium)
 
-                        Text("\(activity.metrics.sets) sets • \(activity.metrics.reps) reps • \(activity.metrics.weight)lbs")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
+                        if !activity.metrics.sets.isEmpty &&
+                           !activity.metrics.reps.isEmpty {
+                            Text("\(activity.metrics.sets) sets • \(activity.metrics.reps) reps • \(activity.metrics.weight)lbs")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            // Display a fallback if metrics are empty
+                            Text("No set/rep data")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                     .padding(.leading)
                 }
@@ -136,7 +135,6 @@ struct ActivityCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
-
 struct MetricRow: View {
     let title: String
     let value: String

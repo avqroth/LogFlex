@@ -17,6 +17,7 @@ struct WorkoutSummaryCard: View {
                     Text(workout.name)
                         .font(.title3)
                         .fontWeight(.semibold)
+                        .foregroundStyle(.accent)
 
                     Text(workout.date.formatted(date: .abbreviated, time: .shortened))
                         .font(.subheadline)
@@ -25,15 +26,17 @@ struct WorkoutSummaryCard: View {
 
                 Spacer()
 
-                Image(systemName: workout.activityType.icon)
-                    .font(.title2)
-                    .foregroundColor(.blue)
+                VStack {
+                    Image(systemName: "chevron.right")
+                        .font(.title2)
+                        .foregroundColor(Color.accent)
+                        .padding(.top, 15)
+                }
             }
         }
         .padding()
         .frame(maxWidth: .infinity)
-        .background(Color(UIColor.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 5)
+        .background(Color(.systemGray6))
+        .cornerRadius(20)
     }
 }

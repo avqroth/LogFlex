@@ -20,14 +20,13 @@ struct WaterTrackingView: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // Header with current progress
             HStack {
                 VStack(alignment: .leading) {
                     Text("Water Intake")
                         .font(.title2)
                         .bold()
                     Text("\(Int(viewModel.todayIntake))oz of \(Int(viewModel.dailyGoal))oz")
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(Color.main)
                 }
 
                 Spacer()
@@ -36,13 +35,11 @@ struct WaterTrackingView: View {
                     .frame(width: 60, height: 60)
             }
 
-            // Progress bar
             ProgressView(value: viewModel.progressPercentage, total: 100)
-                .tint(.blue)
+                .tint(Color.main)
                 .background(Color(.systemGray6))
                 .clipShape(RoundedRectangle(cornerRadius: 8))
 
-            // Quick add buttons
             VStack(alignment: .leading, spacing: 12) {
                 Text("Quick Add")
                     .font(.headline)
@@ -52,12 +49,12 @@ struct WaterTrackingView: View {
                         Button(action: {
                             addWater(amount)
                         }) {
-                            Text("\(Int(amount))oz")
-                                .font(.subheadline)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 8)
-                                .background(Color.blue.opacity(0.1))
-                                .foregroundColor(.blue)
+                            Text("\(Int(amount))")
+                                .font(.callout)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 12)
+                                .background(Color.gray.opacity(0.1))
+                                .foregroundColor(Color.main)
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                     }
@@ -68,14 +65,13 @@ struct WaterTrackingView: View {
                         Image(systemName: "plus")
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(Color.blue.opacity(0.1))
-                            .foregroundColor(.blue)
+                            .background(Color.gray.opacity(0.1))
+                            .foregroundColor(Color.main)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                 }
             }
 
-            // Today's entries
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Text("Today's Entries")
@@ -99,31 +95,26 @@ struct WaterTrackingView: View {
                                     .foregroundStyle(.secondary)
                                     .padding(.vertical, 4)
                             } else {
-                                // Display first entry
                                 if todayWaterLogs.count > 0 {
                                     waterLogRow(todayWaterLogs[0])
                                     Divider()
                                 }
 
-                                // Display second entry
                                 if todayWaterLogs.count > 1 {
                                     waterLogRow(todayWaterLogs[1])
                                     Divider()
                                 }
 
-                                // Display third entry
                                 if todayWaterLogs.count > 2 {
                                     waterLogRow(todayWaterLogs[2])
                                     Divider()
                                 }
 
-                                // Display fourth entry
                                 if todayWaterLogs.count > 3 {
                                     waterLogRow(todayWaterLogs[3])
                                     Divider()
                                 }
 
-                                // Display fifth entry
                                 if todayWaterLogs.count > 4 {
                                     waterLogRow(todayWaterLogs[4])
                                     if todayWaterLogs.count > 5 {
@@ -131,7 +122,6 @@ struct WaterTrackingView: View {
                                     }
                                 }
 
-                                // Show count of additional entries if any
                                 if todayWaterLogs.count > 5 {
                                     Text("+ \(todayWaterLogs.count - 5) more entries")
                                         .font(.caption)
@@ -145,9 +135,8 @@ struct WaterTrackingView: View {
             }
         }
         .padding()
-        .background(Color(UIColor.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 5)
+        .background(Color(.systemGray6))
+        .cornerRadius(20)
         .onAppear {
             loadTodayWater()
         }
@@ -237,7 +226,7 @@ struct CircularProgressView: View {
             Circle()
                 .trim(from: 0, to: progress)
                 .stroke(
-                    Color.blue,
+                    Color.main,
                     style: StrokeStyle(
                         lineWidth: 8,
                         lineCap: .round

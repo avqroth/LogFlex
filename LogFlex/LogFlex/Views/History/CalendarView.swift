@@ -13,12 +13,20 @@ struct CalendarView: View {
     let daysOfWeek = Date.capitalizedFirstLettersOfWeekdays
     let columns = Array(repeating: GridItem(.flexible()), count: 7)
     @State private var days: [Date] = []
+    var selectedActivityType: ActivityType?
 
-    // Replace AppStorage with SwiftData Query
+    // Query all workouts
     @Query var workoutLogs: [WorkoutLog]
 
+    // Filter workouts based on date and activity type
     private func workoutsForDate(_ date: Date) -> [WorkoutLog] {
-        workoutLogs.filter { Calendar.current.isDate($0.date, inSameDayAs: date) }
+        var filtered = workoutLogs.filter { Calendar.current.isDate($0.date, inSameDayAs: date) }
+
+        if let activityType = selectedActivityType {
+            filtered = filtered.filter { $0.activityType == activityType }
+        }
+
+        return filtered
     }
 
     private func hasWorkouts(_ date: Date) -> Bool {
@@ -26,7 +34,7 @@ struct CalendarView: View {
     }
 
     var body: some View {
-        // Rest of your view remains exactly the same
+        // Rest of your view remains the same
         VStack {
             VStack {
                 LabeledContent("Date/Time") {
@@ -78,7 +86,7 @@ struct CalendarView: View {
                         .font(.title)
 
                     if dateWorkouts.isEmpty {
-                        Text("No workouts on this date")
+                        Text("No \(selectedActivityType?.rawValue ?? "workouts") on this date")
                             .foregroundStyle(.secondary)
                             .padding()
                     } else {
@@ -106,5 +114,19 @@ struct CalendarView: View {
         } else {
             return accent.opacity(0.0)
         }
+    }
+}
+
+// Custom button style for the filter buttons
+struct FilterButtonStyle: ButtonStyle {
+    let isSelected: Bool
+
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(isSelected ? Color.main : Color.gray.opacity(0.2))
+            .foregroundColor(isSelected ? .white : .primary)
+            .cornerRadius(20)
     }
 }

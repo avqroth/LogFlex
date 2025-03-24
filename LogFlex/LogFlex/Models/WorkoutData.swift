@@ -14,13 +14,14 @@ final class WorkoutLog {
     var date: Date
     var name: String
     var activityType: ActivityType
-    @Relationship(deleteRule: .cascade) var activities: [ActivityData]
+    @Relationship(deleteRule: .cascade) var activities: [ActivityData]  // Add @Relationship here
     @Relationship(deleteRule: .cascade) var exercises: [ExerciseLog]
     var distance: Double?
     var duration: Double?
     var laps: Int?
     var pace: Double?
     var averageHeartRate: Int?
+    var exerciseMetrics: ActivityMetrics?
 
     init(id: UUID = UUID(),
          date: Date,
@@ -32,7 +33,8 @@ final class WorkoutLog {
          duration: Double? = nil,
          laps: Int? = nil,
          pace: Double? = nil,
-         averageHeartRate: Int? = nil
+         averageHeartRate: Int? = nil,
+         exerciseMetrics: ActivityMetrics? = nil
     ) {
         self.id = id
         self.date = date
@@ -45,9 +47,9 @@ final class WorkoutLog {
         self.laps = laps
         self.pace = pace
         self.averageHeartRate = averageHeartRate
+        self.exerciseMetrics = exerciseMetrics
     }
 }
-
 @Model
 final class ActivityData {
     @Attribute(.unique) var id: UUID
@@ -78,31 +80,24 @@ final class ExerciseLog {
 
 @Model
 final class ActivityMetrics {
-    @Attribute(.unique) var id: UUID
+    var sets: String
+    var reps: String
+    var weight: String
     var distance: String
     var duration: String
     var laps: String
     var calories: String
-    var sets: String
-    var reps: String
-    var weight: String
 
-    init(id: UUID = UUID(),
-         distance: String = "",
-         duration: String = "",
-         laps: String = "",
-         calories: String = "",
-         sets: String = "",
-         reps: String = "",
-         weight: String = "") {
-        self.id = id
+    init(sets: String = "", reps: String = "", weight: String = "",
+         distance: String = "", duration: String = "", laps: String = "",
+         calories: String = "") {
+        self.sets = sets
+        self.reps = reps
+        self.weight = weight
         self.distance = distance
         self.duration = duration
         self.laps = laps
         self.calories = calories
-        self.sets = sets
-        self.reps = reps
-        self.weight = weight
     }
 }
 

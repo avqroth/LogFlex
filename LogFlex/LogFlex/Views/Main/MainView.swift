@@ -14,6 +14,7 @@ struct MainView: View {
     @State private var greeting: String = ""
     @State private var progress: Double = 0.0
     @State private var steps: Int = 0
+    @State private var showingHeartRateHistory = false
 
     @Query(sort: \WorkoutLog.date, order: .reverse) private var recentWorkouts: [WorkoutLog]
     @Environment(\.modelContext) private var modelContext
@@ -35,26 +36,6 @@ struct MainView: View {
                 .padding(.bottom, 50)
 
                 VStack(alignment: .leading, spacing: 24) {
-
-                    Text("Heart Rate")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .padding(.horizontal)
-
-                    currentHeartRateCard
-                        .padding(.horizontal)
-                        .padding(.bottom)
-
-                    Text("Goal History")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .padding(.horizontal)
-                        .padding(.top)
-
-                    GoalHistoryCard(healthKitManager: healthKitManager)
-                        .padding(.horizontal)
-                        .padding(.bottom)
-
                     Text("Most Recent Workout")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -72,6 +53,33 @@ struct MainView: View {
                             .padding(.bottom)
                     }
 
+                    Text("Activity History")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+                        .padding(.top)
+
+                    WeeklyCalendarView(healthKitManager: healthKitManager)
+                        .padding(.horizontal)
+                        .padding(.bottom)
+
+                    Text("Heart Rate")
+                        .font(.title2)
+                        .fontWeight(.bold)
+                        .padding(.horizontal)
+
+                    Button(action: {
+                        showingHeartRateHistory = true
+                    }) {
+                        currentHeartRateCard
+                    }
+                    .buttonStyle(PlainButtonStyle())
+                    .padding(.horizontal)
+                    .padding(.bottom)
+                    .navigationDestination(isPresented: $showingHeartRateHistory) {
+                        AppleStyleHeartRateView(healthKitManager: healthKitManager)
+                    }
+
                     Text("Water Tracking")
                         .font(.title2)
                         .fontWeight(.bold)
@@ -81,13 +89,13 @@ struct MainView: View {
                         .padding(.horizontal)
                         .padding(.bottom)
 
-//                    Text("Heart Rate History")
-//                        .font(.title2)
-//                        .fontWeight(.bold)
-//                        .padding(.horizontal)
+                    //                    Text("Heart Rate History")
+                    //                        .font(.title2)
+                    //                        .fontWeight(.bold)
+                    //                        .padding(.horizontal)
 
-//                    WorkoutHeartRateGraph()
-//                        .padding(.horizontal)
+                    //                    WorkoutHeartRateGraph()
+                    //                        .padding(.horizontal)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 25)
@@ -113,27 +121,28 @@ struct MainView: View {
     private var currentHeartRateCard: some View {
         HStack {
             VStack(alignment: .leading, spacing: 8) {
-                Text("\(Int(healthKitManager.heartRate))")
-                    .font(.system(size: 44, weight: .bold))
-                + Text(" BPM")
-                    .font(.headline)
-                    .foregroundColor(.gray)
+                HStack {
+                    Text("\(Int(healthKitManager.heartRate))")
+                        .font(.system(size: 44, weight: .bold))
+                    + Text(" BPM")
+                        .font(.headline)
+                        .foregroundColor(.gray)
+                }
 
-                Text("Current Heart Rate")
-                    .font(.subheadline)
-                    .foregroundColor(.gray)
+                    Text("Current Heart Rate")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
             }
 
             Spacer()
 
-            Image(systemName: "waveform.path.ecg")
-                .font(.system(size: 44))
+            Image(systemName: "chevron.right")
+                .font(.title2)
                 .foregroundColor(.red)
         }
         .padding()
-        .background(Color(UIColor.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 20))
-        .shadow(color: .gray.opacity(0.2), radius: 10, x: 0, y: 5)
+        .background(Color(.systemGray6))
+        .cornerRadius(20)
     }
 }
 

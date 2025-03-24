@@ -85,27 +85,35 @@ struct CustomWorkout: View {
         let estimatedDuration: TimeInterval = 3600 // Default 1 hour, adjust as needed
         let workoutEndDate = selectedDate.addingTimeInterval(estimatedDuration)
         
-        healthKitManager.fetchWorkoutHeartRate(start: selectedDate, end: workoutEndDate) { heartRate in
-            let activities = activitySections.map { section in
-                ActivityData(
-                    type: section.type,
-                    exercises: section.exercises,
-                    metrics: section.metrics
-                )
-            }
-            
-            let newWorkout = WorkoutLog(
-                date: selectedDate,
-                name: workoutName,
-                activityType: activitySections.first?.type ?? .other,
-                activities: activities,
-                exercises: [],
-                distance: nil,
-                duration: estimatedDuration,
-                laps: nil,
-                pace: nil,
-                averageHeartRate: Int(healthKitManager.heartRate)            )
-            
+        // Convert callback to async/await pattern
+        await healthKitManager.fetchHeartRateAsync(start: selectedDate, end: workoutEndDate)
+        
+        // Map activity sections to activity data
+        let activities = activitySections.map { section in
+            ActivityData(
+                type: section.type,
+                exercises: section.exercises,
+                metrics: section.metrics
+            )
+        }
+        
+        // Create and save the workout
+        let newWorkout = WorkoutLog(
+            date: selectedDate,
+            name: workoutName,
+            activityType: activitySections.first?.type ?? .other,
+            activities: activities,
+            exercises: [],
+            distance: nil,
+            duration: estimatedDuration,
+            laps: nil,
+            pace: nil,
+            averageHeartRate: Int(healthKitManager.heartRate),
+            exerciseMetrics: nil
+        )
+        
+        // Ensure this runs on the main thread
+        await MainActor.run {
             modelContext.insert(newWorkout)
             try? modelContext.save()
             
@@ -113,104 +121,13 @@ struct CustomWorkout: View {
             dismiss()
         }
     }
-    
-    struct ActivitySectionView: View {
-        let section: ActivitySection
-        @Binding var activitySections: [ActivitySection]
-        
-        var body: some View {
-            Section {
-                SectionHeader(
-                    section: section,
-                    activitySections: $activitySections
-                )
-                
-                if section.type == .strength {
-                    StrengthContent(
-                        section: section,
-                        activitySections: $activitySections
-                    )
-                } else {
-                    CardioContent(
-                        section: section,
-                        activitySections: $activitySections
-                    )
-                }
-            }
-        }
-    }
-    
-    struct SectionHeader: View {
-        let section: ActivitySection
-        @Binding var activitySections: [ActivitySection]
-        
-        var body: some View {
-            HStack {
-                Label(section.type.rawValue, systemImage: section.type.icon)
-                Spacer()
-                Button(action: {
-                    if let index = activitySections.firstIndex(where: { $0.id == section.id }) {
-                        activitySections.remove(at: index)
-                    }
-                }) {
-                    Image(systemName: "trash")
-                        .foregroundColor(.red)
-                }
-            }
-        }
-    }
-    
-    struct StrengthContent: View {
-        let section: ActivitySection
-        @Binding var activitySections: [ActivitySection]
+}
 
-        var body: some View {
-            ForEach(section.exercises.indices, id: \.self) { exerciseIndex in
-                if let sectionIndex = activitySections.firstIndex(where: { $0.id == section.id }) {
-                    let exercise = section.exercises[exerciseIndex]
-                    VStack {
-                        let workoutLog = WorkoutLog(
-                            date: Date(),
-                            name: exercise.name,
-                            activityType: section.type
-                        )
-                        ExerciseRow(
-                            exerciseMetrics: ActivityData(
-                                type: section.type,
-                                metrics: exercise.metrics
-                            ),
-                            exerciseName: workoutLog
-                        )
-
-                        MetricsInputs(
-                            metrics: $activitySections[sectionIndex].exercises[exerciseIndex].metrics,
-                            type: section.type,
-                            showStrengthMetrics: true,
-                            exerciseMetrics: exercise.metrics,
-                            exerciseName: exercise.name
-                        )
-                    }
-                }
-            }
-            if let index = activitySections.firstIndex(where: { $0.id == section.id }) {
-                AddExerciseButton(exercises: $activitySections[index].exercises)
-            }
-        }
-    }
-
-    // Cardio content
-    struct CardioContent: View {
-        let section: ActivitySection
-        @Binding var activitySections: [ActivitySection]
-        
-        var body: some View {
-            if let index = activitySections.firstIndex(where: { $0.id == section.id }) {
-                MetricsInputs(
-                    metrics: $activitySections[index].metrics,
-                    type: section.type,
-                    showStrengthMetrics: false,
-                    exerciseMetrics: ActivityMetrics(), exerciseName: ""
-                )
+extension HealthKitManager {
+    func fetchHeartRateAsync(start: Date, end: Date) async {
+        return await withCheckedContinuation { continuation in
+            self.fetchWorkoutHeartRate(start: start, end: end) { heartRate in
+                continuation.resume()
             }
         }
     }
