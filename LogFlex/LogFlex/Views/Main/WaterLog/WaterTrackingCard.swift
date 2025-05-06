@@ -22,9 +22,15 @@ struct WaterTrackingView: View {
         VStack(spacing: 20) {
             HStack {
                 VStack(alignment: .leading) {
-                    Text("Water Intake")
-                        .font(.title2)
-                        .bold()
+                    HStack {
+                        Text("Water Intake")
+                            .font(.title2)
+                            .bold()
+
+                        Image(systemName: "drop.fill")
+                            .foregroundStyle(.main)
+                    }
+
                     Text("\(Int(viewModel.todayIntake))oz of \(Int(viewModel.dailyGoal))oz")
                         .foregroundStyle(Color.main)
                 }

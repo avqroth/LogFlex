@@ -1,21 +1,15 @@
-//
-//  MainViewswift.swift
-//  LogFlex
-//
-//  Created by Avery Roth on 9/24/24.
-//
-
 import SwiftUI
 import SwiftData
 
 struct MainView: View {
     @EnvironmentObject var healthKitManager: HealthKitManager
-    @StateObject private var circleViewModel = CircleViewModel()
     @State private var greeting: String = ""
     @State private var progress: Double = 0.0
     @State private var steps: Int = 0
     @State private var showingHeartRateHistory = false
-
+    @State private var isRefreshing = false
+    @State private var isBeating = false
+    
     @Query(sort: \WorkoutLog.date, order: .reverse) private var recentWorkouts: [WorkoutLog]
     @Environment(\.modelContext) private var modelContext
 
@@ -28,12 +22,14 @@ struct MainView: View {
             ScrollView {
                 Spacer(minLength: 0)
 
-                VStack {
-                    HealthProgressCircle(healthKitManager: healthKitManager)
+                HStack {
+                    VStack {
+                        HealthProgressCircle(healthKitManager: healthKitManager)
+                    }
+                    .padding()
+                    .padding(.top)
+                    .padding(.bottom, 20)
                 }
-                .padding()
-                .padding(.top)
-                .padding(.bottom, 50)
 
                 VStack(alignment: .leading, spacing: 24) {
                     Text("Most Recent Workout")
@@ -63,22 +59,17 @@ struct MainView: View {
                         .padding(.horizontal)
                         .padding(.bottom)
 
+                    HistoricalDataButton(healthKitManager: healthKitManager)
+                        .padding(.horizontal)
+                        .padding(.bottom, 20)
+
                     Text("Heart Rate")
                         .font(.title2)
                         .fontWeight(.bold)
                         .padding(.horizontal)
 
-                    Button(action: {
-                        showingHeartRateHistory = true
-                    }) {
-                        currentHeartRateCard
-                    }
-                    .buttonStyle(PlainButtonStyle())
-                    .padding(.horizontal)
-                    .padding(.bottom)
-                    .navigationDestination(isPresented: $showingHeartRateHistory) {
-                        AppleStyleHeartRateView(healthKitManager: healthKitManager)
-                    }
+                    SimpleBeatingHeartView()
+                        .padding(.bottom)
 
                     Text("Water Tracking")
                         .font(.title2)
@@ -88,39 +79,26 @@ struct MainView: View {
                     WaterTrackingView()
                         .padding(.horizontal)
                         .padding(.bottom)
-
-                    //                    Text("Heart Rate History")
-                    //                        .font(.title2)
-                    //                        .fontWeight(.bold)
-                    //                        .padding(.horizontal)
-
-                    //                    WorkoutHeartRateGraph()
-                    //                        .padding(.horizontal)
                 }
                 .padding(.horizontal)
                 .padding(.bottom, 25)
             }
+            .refreshable {
+                await refreshHealthData()
+            }
             .onAppear {
-                healthKitManager.fetchTodaySteps()
-                healthKitManager.fetchTodayCalories()
-                healthKitManager.fetchHeartRate()
-            }
-            .onChange(of: healthKitManager.caloriesBurned) {
-                circleViewModel.updateCalories(healthKitManager.caloriesBurned)
-            }
-            .onChange(of: healthKitManager.milesWalked) {
-                circleViewModel.updateMiles(healthKitManager.milesWalked)
-            }
-            .onChange(of: healthKitManager.heartRate) {
-                circleViewModel.updateHeartRate(healthKitManager.heartRate)
+                Task {
+                    await refreshHealthData()
+                }
             }
             .navigationTitle("Main")
+            
         }
     }
 
     private var currentHeartRateCard: some View {
         HStack {
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 10) {
                 HStack {
                     Text("\(Int(healthKitManager.heartRate))")
                         .font(.system(size: 44, weight: .bold))
@@ -129,26 +107,38 @@ struct MainView: View {
                         .foregroundColor(.gray)
                 }
 
-                    Text("Current Heart Rate")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
+                Text("Current Heart Rate")
+                    .font(.subheadline)
+                    .foregroundColor(.gray)
             }
 
             Spacer()
 
-            Image(systemName: "chevron.right")
-                .font(.title2)
-                .foregroundColor(.red)
+            SimpleBeatingHeartView()
+                .padding(.trailing)
         }
         .padding()
         .background(Color(.systemGray6))
         .cornerRadius(20)
     }
-}
 
+    @MainActor
+    private func refreshHealthData() async {
+        isRefreshing = true
 
+        do {
+            try await Task.sleep(for: .milliseconds(500))
 
-#Preview {
-    MainView()
-        .environmentObject(HealthKitManager())
+            await healthKitManager.fetchTodaySteps()
+            await healthKitManager.fetchTodayCalories()
+            await healthKitManager.fetchHeartRate()
+            await healthKitManager.fetchMiles()
+        } catch is CancellationError {
+            print("Refresh operation was cancelled")
+        } catch {
+            print("Error during refresh: \(error)")
+        }
+
+        isRefreshing = false
+    }
 }

@@ -10,9 +10,10 @@ import SwiftUI
 struct ExerciseCard: View {
     let exercise: Exercise
     let mainColor = Color.main
+    @ObservedObject var viewModel: ExerciseViewModel
 
     var body: some View {
-        NavigationLink(destination: ExerciseDetailView(exercise: exercise)) {
+        NavigationLink(destination: ExerciseDetailView(exercise: exercise, viewModel: ExerciseViewModel())) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: "dumbbell.fill")
@@ -20,6 +21,7 @@ struct ExerciseCard: View {
 
                     Text(exercise.name)
                         .font(.headline)
+                        .multilineTextAlignment(.leading)
 
                     Spacer()
 
@@ -36,9 +38,4 @@ struct ExerciseCard: View {
             .cornerRadius(12)
         }
     }
-}
-
-
-#Preview {
-    ExerciseCard(exercise: Exercise(name: "", type: "", muscle: "", equipment: "", difficulty: "", instructions: ""))
 }

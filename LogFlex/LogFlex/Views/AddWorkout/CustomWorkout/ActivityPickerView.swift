@@ -21,6 +21,7 @@ struct ActivityPickerView: View {
                     Label(activity.rawValue, systemImage: activity.icon)
                 }
                 .foregroundStyle(Color.main)
+                .padding(.top)
             }
             .navigationTitle("Choose Activity")
             .toolbar {

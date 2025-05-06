@@ -28,9 +28,17 @@ struct AddWorkoutView: View {
                            }
                            .padding()
                            .background(Color(.systemBackground))
-                           .cornerRadius(12)
+                           .cornerRadius(20)
                        }
                        .foregroundStyle(Color.main)
+                       HStack {
+                           Text("Select Start Empty Workout to start!")
+                               .font(.title2)
+                               .bold()
+                               .foregroundStyle(Color(.systemGray))
+                               .multilineTextAlignment(.center)
+                               .padding(.top, 150)
+                       }
                    }
                    .padding()
                }

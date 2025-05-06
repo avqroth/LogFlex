@@ -21,7 +21,7 @@ struct WorkoutSummaryCard: View {
 
                     Text(workout.date.formatted(date: .abbreviated, time: .shortened))
                         .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .foregroundStyle(.white)
                 }
 
                 Spacer()

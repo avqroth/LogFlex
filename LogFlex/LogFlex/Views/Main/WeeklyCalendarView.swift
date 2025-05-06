@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 @Model
 class UserGoals {
@@ -12,10 +13,11 @@ class UserGoals {
         self.stepGoal = stepGoal
         self.calorieGoal = calorieGoal
     }
-} 
+}
 
 struct WeeklyCalendarView: View {
     let healthKitManager: HealthKitManager
+    @State private var rawSelectedDate: Date?
     @State private var weeklySteps: [Double] = Array(repeating: 0, count: 7)
     @State private var weeklyCalories: [Double] = Array(repeating: 0, count: 7)
     @State private var showingGoalEditor = false
@@ -24,7 +26,6 @@ struct WeeklyCalendarView: View {
     @State private var currentStepGoal: Int = 10000
     @State private var currentCalorieGoal: Int = 500
     @State private var selectedTab = 0
-
     private let weekdays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
     private var currentGoals: UserGoals {
@@ -56,9 +57,17 @@ struct WeeklyCalendarView: View {
         Double(averageCalories) / Double(currentCalorieGoal)
     }
 
+    private var totalSteps: Int {
+        Int(weeklySteps.reduce(0, +))
+    }
+
+    private var totalCalories: Int {
+        Int(weeklyCalories.reduce(0, +))
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
-            HStack(spacing: 12) {
+        VStack(spacing: 10) {
+            HStack(spacing: 25) {
                 SummaryCard(
                     title: "Steps",
                     icon: "figure.walk",
@@ -89,9 +98,16 @@ struct WeeklyCalendarView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text(selectedTab == 0 ? "This Week's Steps" : "This Week's Calories")
                     .font(.headline)
-                    .padding(.bottom, 4)
+                    .padding(.top)
 
-                fixedWeeklyChart()
+                Text("Total: \(selectedTab == 0 ? totalSteps : totalCalories)")
+                    .fontWeight(.semibold)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .padding(.bottom)
+
+                chartsWeeklyView()
+                    .padding(.bottom)
             }
         }
         .padding()
@@ -102,40 +118,36 @@ struct WeeklyCalendarView: View {
         }
     }
 
-    private func fixedWeeklyChart() -> some View {
+    private func chartsWeeklyView() -> some View {
         let currentColor = selectedTab == 0 ? Color.stand : Color.accent
         let values = selectedTab == 0 ? weeklySteps : weeklyCalories
-        let goal = selectedTab == 0 ? Double(currentStepGoal) : Double(currentCalorieGoal)
+        let title = selectedTab == 0 ? "Steps" : "Calories"
 
-        return VStack(spacing: 16) {
-            HStack(alignment: .bottom, spacing: 5) {
-                ForEach(0..<7, id: \.self) { index in
-                    VStack(spacing: 4) {
-                        RoundedRectangle(cornerRadius: 6)
-                            .fill(currentColor)
-                            .frame(height: calculateBarHeight(for: values[index], goal: goal))
-
-                        Text(weekdays[index])
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-
-                        Text("\(Int(values[index]))")
-                            .font(.caption2)
-                            .foregroundColor(.secondary)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .background(isTodayIndex(index) ? Color.gray.opacity(0.1) : Color.clear)
-                    .cornerRadius(6)
-                }
+        return Chart {
+            ForEach(0..<7, id: \.self) { index in
+                BarMark(
+                    x: .value("Day", weekdays[index]),
+                    y: .value(title, values[index])
+                )
+                .foregroundStyle(currentColor.gradient)
             }
-            .frame(height: 180)
         }
-    }
-
-    private func calculateBarHeight(for value: Double, goal: Double) -> CGFloat {
-        let maxHeight: CGFloat = 150
-        let percentage = min(value / goal, 1.0)
-        return max(20, maxHeight * CGFloat(percentage))
+        .frame(height: 180)
+        .chartXSelection(value: $rawSelectedDate)
+        .onChange(of: rawSelectedDate, { oldValue, newValue in print(newValue!)
+        })
+        .chartXAxis {
+            AxisMarks {
+                AxisValueLabel()
+                AxisGridLine()
+            }
+        }
+        .chartYAxis {
+            AxisMarks {
+                AxisValueLabel()
+                AxisGridLine()
+            }
+        }
     }
 
     private func isTodayIndex(_ index: Int) -> Bool {

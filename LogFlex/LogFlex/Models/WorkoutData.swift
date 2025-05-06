@@ -14,7 +14,7 @@ final class WorkoutLog {
     var date: Date
     var name: String
     var activityType: ActivityType
-    @Relationship(deleteRule: .cascade) var activities: [ActivityData]  // Add @Relationship here
+    @Relationship(deleteRule: .cascade) var activities: [ActivityData]  
     @Relationship(deleteRule: .cascade) var exercises: [ExerciseLog]
     var distance: Double?
     var duration: Double?
@@ -120,6 +120,7 @@ enum ActivityType: String, Codable, CaseIterable{
     case walking = "Walking"
     case cycling = "Cycling"
     case swimming = "Swimming"
+    case rowing = "Rowing"
     case yoga = "Yoga"
     case hiit = "HIIT"
     case sports = "Sports"
@@ -137,6 +138,8 @@ enum ActivityType: String, Codable, CaseIterable{
                 return "bicycle"
             case .swimming:
                 return "figure.pool.swim"
+            case .rowing:
+                return "figure.indoor.rowing"
             case .yoga:
                 return "figure.mind.and.body"
             case .hiit:

@@ -24,7 +24,8 @@ struct CustomWorkout: View {
     private let cardioActivities: [ActivityType] = [
         .running,
         .cycling,
-        .swimming
+        .swimming,
+        .rowing
     ]
     
     var body: some View {
