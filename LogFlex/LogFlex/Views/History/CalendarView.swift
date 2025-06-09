@@ -112,21 +112,7 @@ struct CalendarView: View {
         } else if selectedDate?.startOfDay == day.startOfDay {
             return color.opacity(0.3)
         } else {
-            return accent.opacity(0.0)
+            return .main.opacity(0.0)
         }
-    }
-}
-
-// Custom button style for the filter buttons
-struct FilterButtonStyle: ButtonStyle {
-    let isSelected: Bool
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .padding(.horizontal, 16)
-            .padding(.vertical, 8)
-            .background(isSelected ? Color.main : Color.gray.opacity(0.2))
-            .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(20)
     }
 }

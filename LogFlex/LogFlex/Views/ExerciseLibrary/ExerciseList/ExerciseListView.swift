@@ -9,18 +9,19 @@ import SwiftUI
 
 struct ExerciseListView: View {
     @StateObject var viewModel = ExerciseViewModel()
+    @StateObject var subscriptionViewModel = SubscriptionViewModel()
     let mainColor = Color.main
 
     var body: some View {
         NavigationStack {
-            ExerciseContentView(viewModel: viewModel, mainColor: mainColor)
-                .navigationTitle("Exercise Library")
-                .refreshable {
-                    await viewModel.loadExercises()
-                }
+            SubscriptionGate(restriction: .freeAccess) {
+                ExerciseContentView(viewModel: viewModel, mainColor: mainColor)
+                    .navigationTitle("Exercise Library")
+            }
         }
     }
 }
+
 
 #Preview {
     ExerciseListView()

@@ -12,13 +12,11 @@ struct EditGoalsView: View {
     @Environment(\.modelContext) private var modelContext
     @Bindable var goals: UserGoals
 
-    // Temporary state to hold changes
     @State private var tempStepGoal: Int
     @State private var tempCalorieGoal: Int
 
     init(goals: UserGoals) {
         self.goals = goals
-        // Initialize with current values
         _tempStepGoal = State(initialValue: goals.stepGoal)
         _tempCalorieGoal = State(initialValue: goals.calorieGoal)
     }

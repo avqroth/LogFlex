@@ -40,6 +40,7 @@ struct SectionHeader: View {
     var body: some View {
         HStack {
             Label(section.type.rawValue, systemImage: section.type.icon)
+                .foregroundStyle(.main)
             Spacer()
             Button(action: {
                 if let index = activitySections.firstIndex(where: { $0.id == section.id }) {

@@ -15,8 +15,11 @@ class ExerciseViewModel: ObservableObject {
     @Published var searchText = ""
     @Published var selectedMuscle: String? = nil
     @Published var showingFavoritesOnly = false
-    @Published var favoriteExercises: [Exercise] = [] // Published array of favorite exercises
+    @Published var favoriteExercises: [Exercise] = []
+    @Published var hasError = false
+    @Published var errorMessage: String?
 
+    private let networkManager = NetworkManager()
     private let exerciseService = ExerciseService()
 
     var muscleGroups: [String] = [
@@ -26,7 +29,30 @@ class ExerciseViewModel: ObservableObject {
         "shoulders", "traps", "triceps"
     ]
 
-    // Computed property to get appropriate exercises
+    @MainActor
+    func loadExercises() async {
+        isLoading = true
+        hasError = false
+        errorMessage = nil
+
+        do {
+            exercises = try await exerciseService.fetchExercises(
+                muscle: selectedMuscle,
+                name: searchText.isEmpty ? nil : searchText
+            )
+        } catch let error as NetworkError {
+            hasError = true
+            errorMessage = error.localizedDescription
+            exercises = []
+        } catch {
+            hasError = true
+            errorMessage = "Failed to load exercises: \(error.localizedDescription)"
+            exercises = []
+        }
+
+        isLoading = false
+    }
+    
     var filteredExercises: [Exercise] {
         if showingFavoritesOnly {
             return favoriteExercises
@@ -41,66 +67,51 @@ class ExerciseViewModel: ObservableObject {
         }
     }
 
-    // Add to favorites
     func addToFavorites(_ exercise: Exercise) {
-        if !isExerciseFavorited(exercise) {
-            favoriteExercises.append(exercise)
-            saveFavorites()
+            if !isExerciseFavorited(exercise) {
+                favoriteExercises.append(exercise)
+                saveFavorites()
+                objectWillChange.send()
+            }
         }
-    }
 
-    // Remove from favorites
     func removeFromFavorites(_ exercise: Exercise) {
-        favoriteExercises.removeAll { $0.name == exercise.name }
-        saveFavorites()
-    }
-
-    // Toggle favorite
-    func toggleFavorite(_ exercise: Exercise) {
-        if isExerciseFavorited(exercise) {
-            removeFromFavorites(exercise)
-        } else {
-            addToFavorites(exercise)
+            favoriteExercises.removeAll { $0.name == exercise.name }
+            saveFavorites()
+            objectWillChange.send()
         }
-        // Force UI update
-        objectWillChange.send()
-    }
 
-    // Check if favorited
+        func toggleFavorite(_ exercise: Exercise) {
+            if isExerciseFavorited(exercise) {
+                removeFromFavorites(exercise)
+            } else {
+                addToFavorites(exercise)
+            }
+            refreshFavorites()
+        }
+
+        func refreshFavorites() {
+            loadFavorites()
+            objectWillChange.send()
+        }
+
     func isExerciseFavorited(_ exercise: Exercise) -> Bool {
         return favoriteExercises.contains { $0.name == exercise.name }
     }
 
-    // Save favorites to UserDefaults
     private func saveFavorites() {
         if let encoded = try? JSONEncoder().encode(favoriteExercises) {
             UserDefaults.standard.set(encoded, forKey: "favoriteExercises")
+            UserDefaults.standard.synchronize()
+
         }
     }
 
-    // Load favorites from UserDefaults
     private func loadFavorites() {
         if let data = UserDefaults.standard.data(forKey: "favoriteExercises"),
            let decoded = try? JSONDecoder().decode([Exercise].self, from: data) {
             favoriteExercises = decoded
         }
-    }
-
-    // Load exercises from API
-    @MainActor
-    func loadExercises() async {
-        isLoading = true
-
-        do {
-            exercises = try await exerciseService.fetchExercises(
-                muscle: selectedMuscle,
-                name: searchText.isEmpty ? nil : searchText
-            )
-        } catch {
-            print("Error fetching exercises: \(error.localizedDescription)")
-        }
-
-        isLoading = false
     }
 
     init() {

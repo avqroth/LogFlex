@@ -23,12 +23,11 @@ struct TabButton: View {
                     ZStack {
                         if isSelected {
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.blue.opacity(0.1))
+                                .fill(Color.gray.opacity(0.1))
                         }
                     }
                 )
         }
-        .foregroundColor(isSelected ? .blue : .gray)
+        .foregroundColor(isSelected ? Color.main : .gray)
     }
 }
-

@@ -9,8 +9,9 @@ import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @EnvironmentObject var healthKit: HealthKitManager
+    @EnvironmentObject var healthKitManager: HealthKitManager
     @StateObject var nutritionManager = NutritionManager()
+
     var body: some View {
         TabView {
             MainView()
@@ -18,7 +19,7 @@ struct ContentView: View {
                     Label("Home", systemImage: "house")
                         .font(.custom("Avenir.bold", size: 18))
                 }
-                .environmentObject(healthKit)
+                .environmentObject(healthKitManager)
 
             ExerciseLibraryView()
                 .tabItem {

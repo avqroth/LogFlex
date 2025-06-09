@@ -82,14 +82,11 @@ struct CustomWorkout: View {
     }
     
     private func saveWorkout() async {
-        // Calculate workout duration based on exercises
-        let estimatedDuration: TimeInterval = 3600 // Default 1 hour, adjust as needed
+        let estimatedDuration: TimeInterval = 3600
         let workoutEndDate = selectedDate.addingTimeInterval(estimatedDuration)
         
-        // Convert callback to async/await pattern
         await healthKitManager.fetchHeartRateAsync(start: selectedDate, end: workoutEndDate)
         
-        // Map activity sections to activity data
         let activities = activitySections.map { section in
             ActivityData(
                 type: section.type,
@@ -98,7 +95,6 @@ struct CustomWorkout: View {
             )
         }
         
-        // Create and save the workout
         let newWorkout = WorkoutLog(
             date: selectedDate,
             name: workoutName,
@@ -113,7 +109,6 @@ struct CustomWorkout: View {
             exerciseMetrics: nil
         )
         
-        // Ensure this runs on the main thread
         await MainActor.run {
             modelContext.insert(newWorkout)
             try? modelContext.save()

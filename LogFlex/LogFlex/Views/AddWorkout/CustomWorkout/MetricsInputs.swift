@@ -1,3 +1,5 @@
+
+
 import SwiftUI
 
 struct MetricsInputs: View {
@@ -48,7 +50,6 @@ struct MetricsInputs: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            // Exercise name header
             if !exerciseName.isEmpty {
                 HStack {
                     Text(exerciseName)
@@ -68,19 +69,15 @@ struct MetricsInputs: View {
                 cardioMetricsView
             }
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(backgroundColor)
-                .shadow(color: shadowColor, radius: 10, x: 0, y: 2)
-        )
-        .padding(.horizontal)
+        .padding(.vertical)
     }
 
     // MARK: - Strength Training Metrics
     private var strengthMetricsView: some View {
         VStack(spacing: 24) {
-            HStack(spacing: 12) {
+            // Metrics card
+            VStack(spacing: 0) {
+                // Sets
                 metricCardView(
                     value: $setsString,
                     icon: "square.stack.3d.up.fill",
@@ -89,6 +86,10 @@ struct MetricsInputs: View {
                     onChange: { if let val = Int($0) { metrics.sets = String(val) } }
                 )
 
+                Divider()
+                    .background(Color(.systemGray5).opacity(0.5))
+
+                // Reps
                 metricCardView(
                     value: $repsString,
                     icon: "repeat",
@@ -96,18 +97,24 @@ struct MetricsInputs: View {
                     keyboardType: .numberPad,
                     onChange: { if let val = Int($0) { metrics.reps = String(val) } }
                 )
-            }
 
-            // Weight
-            metricCardView(
-                value: $weightString,
-                icon: "scalemass.fill",
-                label: "Weight (lbs)",
-                keyboardType: .decimalPad,
-                onChange: { if let val = Int($0) { metrics.weight = String(val) } },
-                showTrend: true,
-                trendValue: compareToExerciseMetric(currentValue: metrics.weight, previousValue: exerciseMetrics.weight)
-            )
+                Divider()
+                    .background(Color(.systemGray5).opacity(0.5))
+
+                // Weight
+                metricCardView(
+                    value: $weightString,
+                    icon: "scalemass.fill",
+                    label: "Weight (lbs)",
+                    keyboardType: .decimalPad,
+                    onChange: { if let val = Int($0) { metrics.weight = String(val) } },
+                    showTrend: true,
+                    trendValue: compareToExerciseMetric(currentValue: metrics.weight, previousValue: exerciseMetrics.weight)
+                )
+            }
+            .background(Color(.systemGroupedBackground))
+            .cornerRadius(10)
+            .padding(.horizontal)
 
             // Previous best
             if let prevWeight = Int(exerciseMetrics.weight), prevWeight > 0 {
@@ -121,14 +128,14 @@ struct MetricsInputs: View {
 
                     Spacer()
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 20)
             }
         }
     }
 
-    // MARK: - Cardio Metrics
     private var cardioMetricsView: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 0) {
+            // Distance
             if [.running, .cycling, .rowing].contains(type) {
                 metricCardView(
                     value: $distanceString,
@@ -139,8 +146,12 @@ struct MetricsInputs: View {
                     showTrend: true,
                     trendValue: compareToExerciseMetric(currentValue: metrics.distance, previousValue: exerciseMetrics.distance)
                 )
+
+                Divider()
+                    .background(Color(.systemGray5).opacity(0.5))
             }
 
+            // Laps
             if type == .swimming {
                 metricCardView(
                     value: $lapsString,
@@ -151,32 +162,41 @@ struct MetricsInputs: View {
                     showTrend: true,
                     trendValue: compareToExerciseMetric(currentValue: metrics.laps, previousValue: exerciseMetrics.laps)
                 )
+
+                Divider()
+                    .background(Color(.systemGray5).opacity(0.5))
             }
 
+            // Duration
             metricCardView(
                 value: $durationString,
                 icon: "clock",
-                label: "Duration",
-                subtitle: "(minutes)",
+                label: "Duration (minutes)",
                 keyboardType: .numberPad,
                 onChange: { if let val = Int($0) { metrics.duration = String(val) } },
                 showTrend: true,
                 trendValue: compareToExerciseMetric(currentValue: metrics.duration, previousValue: exerciseMetrics.duration, higherIsBetter: false)
             )
 
+            Divider()
+                .background(Color(.systemGray5).opacity(0.5))
+
+            // Calories
             metricCardView(
                 value: $caloriesString,
                 icon: "flame.fill",
-                label: "Calories burned",
+                label: "Calories Burned",
                 keyboardType: .numberPad,
                 onChange: { if let val = Int($0) { metrics.calories = String(val) } },
                 showTrend: true,
                 trendValue: compareToExerciseMetric(currentValue: metrics.calories, previousValue: exerciseMetrics.calories)
             )
         }
+        .background(Color(.systemGroupedBackground))
+        .cornerRadius(10)
+        .padding(.horizontal)
     }
 
-    // MARK: - Metric Card Components
     private func metricCardView(
         value: Binding<String>,
         icon: String,
@@ -187,104 +207,41 @@ struct MetricsInputs: View {
         showTrend: Bool = false,
         trendValue: Double? = nil
     ) -> some View {
-        VStack {
-            HStack(alignment: .top, spacing: 16) {
-                // Icon with gradient background
-                ZStack {
-                    Circle()
-                        .fill(
-                            LinearGradient(
-                                gradient: Gradient(colors: [accentColor, accentColor.opacity(0.7)]),
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 40, height: 40)
+        HStack {
+            // Label
+            Text(label)
+                .foregroundColor(.primary)
+                .font(.system(size: 17))
 
-                    Image(systemName: icon)
-                        .foregroundColor(.white)
-                        .font(.system(size: 18, weight: .semibold))
+            Spacer()
+
+            // Trend indicator if applicable
+            if showTrend, let trend = trendValue {
+                HStack(spacing: 2) {
+                    Image(systemName: trend >= 0 ? "arrow.up" : "arrow.down")
+                        .font(.caption2)
+                        .foregroundColor(trend >= 0 ? .green : .red)
+
+                    Text("\(abs(trend), specifier: "%.1f")%")
+                        .font(.caption2)
+                        .foregroundColor(trend >= 0 ? .green : .red)
                 }
-
-                VStack(alignment: .leading, spacing: 6) {
-                    // Label
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(label)
-                            .font(titleFont)
-                            .foregroundColor(.primary)
-
-                        if let subtitle = subtitle {
-                            Text(subtitle)
-                                .font(captionFont)
-                                .foregroundColor(.secondary)
-                        }
-                    }
-
-                    // Text field with animated focus state
-                    ZStack(alignment: .leading) {
-                        TextField("0", text: value)
-                            .keyboardType(keyboardType)
-                            .font(valueFont)
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(secondaryBackgroundColor)
-                                    .overlay(
-                                        RoundedRectangle(cornerRadius: 10)
-                                            .stroke(isEditing ? accentColor : Color.clear, lineWidth: 2)
-                                    )
-                            )
-                            .onTapGesture {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    isEditing = true
-                                }
-                            }
-                            .onChange(of: value.wrappedValue) {
-                                onChange(value.wrappedValue)
-                            }
-                            .onSubmit {
-                                withAnimation(.easeInOut(duration: 0.2)) {
-                                    isEditing = false
-                                }
-                            }
-
-                        // Show trend indicator if applicable
-                        if showTrend, let trend = trendValue, trend != 0 {
-                            HStack {
-                                Spacer()
-
-                                HStack(spacing: 2) {
-                                    Image(systemName: trend > 0 ? "arrow.up" : "arrow.down")
-                                    Text("\(abs(trend), specifier: "%.1f")%")
-                                        .font(.caption2.bold())
-                                }
-                                .foregroundColor(trend > 0 ? .green : .red)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(
-                                    Capsule()
-                                        .fill((trend > 0 ? Color.green : Color.red).opacity(0.15))
-                                )
-                            }
-                            .padding(.trailing, 12)
-                        }
-                    }
-                }
-
-                Spacer()
+                .padding(.trailing, 4)
             }
-            .padding(16)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(backgroundColor)
-                    .shadow(color: shadowColor, radius: 4, x: 0, y: 1)
-            )
+
+            // Input field
+            TextField("0", text: value)
+                .keyboardType(keyboardType)
+                .multilineTextAlignment(.trailing)
+                .font(.system(size: 17))
+                .onChange(of: value.wrappedValue) { newValue in
+                    onChange(newValue)
+                }
         }
+        .padding(.vertical, 12)
+        .padding(.horizontal, 16)
     }
 
-    // MARK: - Helper Functions
-
-    // Calculate percentage difference between current and previous metrics
     private func compareToExerciseMetric(currentValue: String, previousValue: String, higherIsBetter: Bool = true) -> Double? {
         guard let current = Double(currentValue), let previous = Double(previousValue), previous > 0 else {
             return nil

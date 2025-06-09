@@ -33,7 +33,7 @@ struct SearchFilterBar: View {
                 }
             } label: {
                 Image(systemName: "line.3.horizontal.decrease.circle")
-                    .foregroundColor(.blue)
+                    .foregroundColor(.accent)
                     .font(.title2)
             }
         }

@@ -14,21 +14,22 @@ struct FavoritesTabView: View {
     var body: some View {
         HStack(spacing: 0) {
             TabButton(title: "All Exercises", isSelected: !showingFavoritesOnly) {
-                withAnimation(.spring()) {
-                    showingFavoritesOnly = false
-                }
+                showingFavoritesOnly = false
+
             }
 
             TabButton(title: "Favorites", isSelected: showingFavoritesOnly) {
-                withAnimation(.spring()) {
-                    showingFavoritesOnly = true
-                    // Force refresh when showing favorites
-                    viewModel.objectWillChange.send()
-                }
+                viewModel.refreshFavorites()
+
+                showingFavoritesOnly = true
             }
         }
         .background(Color(.systemGray6).opacity(0.5))
-        .cornerRadius(12)
+        .cornerRadius(18)
+        .onChange(of: showingFavoritesOnly) { oldValue, newValue in
+            if newValue == true {
+                viewModel.refreshFavorites()
+            }
+        }
     }
 }
-
