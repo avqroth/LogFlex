@@ -1,1 +1,23 @@
+<<<<<<< HEAD
 LogFlex/LogFlex.xcodeproj/project.pbxproj
+=======
+# Hide API keys
+Property List.plist
+
+# Mac junk
+.DS_Store
+
+# Xcode
+xcuserdata/
+*.xcscmblueprint
+*.xccheckout
+DerivedData/
+*.moved-aside
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+
+# CocoaPods
+Pods/
+>>>>>>> 4e3985cd4c82750e749cf31527252be1eb771ed5

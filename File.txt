@@ -1,0 +1,4 @@
+Ensure you have the necessary keys in your Info.plist:
+
+NSHealthShareUsageDescription
+NSHealthUpdateUsageDescription
