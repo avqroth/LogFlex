@@ -1,8 +1,6 @@
 //
-//  NetworkErrorOverlay.swift
+//  NetworkError.swift
 //  LogFlex
-//
-//  Created by Avery Roth on 5/9/25.
 //
 
 import Foundation
@@ -10,7 +8,7 @@ import Foundation
 enum NetworkError: Error, LocalizedError {
     case invalidURL
     case badResponse(statusCode: Int)
-    case decodingFailed
+    case decodingFailed(reason: String)
     case noInternet
     case timeout
     case serverError(message: String)
@@ -21,9 +19,11 @@ enum NetworkError: Error, LocalizedError {
         case .invalidURL:
             return "Invalid URL"
         case .badResponse(let code):
-            return code == 404 ? "No exercises found" : "Server returned error code: \(code)"
-        case .decodingFailed:
-            return "Could not process exercise data"
+            return code == 404
+                ? "No exercises found"
+                : "Server returned error \(code)"
+        case .decodingFailed(let reason):
+            return "Could not process data: \(reason)"
         case .noInternet:
             return "No internet connection"
         case .timeout:

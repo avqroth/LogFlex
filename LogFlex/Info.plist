@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>API Key</key>
-	<string>Z9kPsS4DodbYXE8uaM5F5A==qM4lRh5wV3bv1oJC</string>
+	<key>API_NINJA_KEY</key>
+	<string>$(API_NINJA_KEY)</string>
 </dict>
 </plist>

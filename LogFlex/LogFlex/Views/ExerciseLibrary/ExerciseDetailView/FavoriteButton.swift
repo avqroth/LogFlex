@@ -13,7 +13,7 @@ struct FavoriteButton: View {
 
     var body: some View {
         Button(action: {
-            viewModel.toggleFavorite(exercise)
+            viewModel.toggleFavorite(for: exercise)
         }) {
             ZStack {
                 Circle()

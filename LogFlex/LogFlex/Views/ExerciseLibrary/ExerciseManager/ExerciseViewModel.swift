@@ -9,115 +9,92 @@ import Foundation
 import SwiftUI
 import Combine
 
+@MainActor
 class ExerciseViewModel: ObservableObject {
     @Published var exercises: [Exercise] = []
+    @Published var filteredExercises: [Exercise] = []  
+    @Published var searchText: String = ""
+    @Published var selectedMuscle: String = ""
     @Published var isLoading = false
-    @Published var searchText = ""
-    @Published var selectedMuscle: String? = nil
-    @Published var showingFavoritesOnly = false
-    @Published var favoriteExercises: [Exercise] = []
-    @Published var hasError = false
     @Published var errorMessage: String?
+    @Published var showingFavoritesOnly: Bool = false
 
     private let networkManager = NetworkManager()
-    private let exerciseService = ExerciseService()
+    private lazy var exerciseService = ExerciseService(networkManager: networkManager)
 
-    var muscleGroups: [String] = [
-        "abdominals", "biceps", "calves", "chest",
-        "forearms", "glutes", "hamstrings", "lats",
-        "lower_back", "middle_back", "neck", "quadriceps",
-        "shoulders", "traps", "triceps"
+    var hasError: Bool {
+        errorMessage != nil
+    }
+    
+    let muscleGroups: [String] = [
+        "abdominals",
+        "abductors",
+        "adductors",
+        "biceps",
+        "calves",
+        "chest",
+        "forearms",
+        "glutes",
+        "hamstrings",
+        "lats",
+        "lower_back",
+        "middle_back",
+        "neck",
+        "quadriceps",
+        "traps",
+        "triceps"
     ]
 
-    @MainActor
-    func loadExercises() async {
+    func applyFilters() {
+        filteredExercises = exercises.filter { exercise in
+            let matchesSearch = searchText.isEmpty ||
+                exercise.name.localizedCaseInsensitiveContains(searchText)
+            let matchesMuscle = selectedMuscle.isEmpty ||
+                exercise.muscle.localizedCaseInsensitiveContains(selectedMuscle)
+            let matchesFavorites = !showingFavoritesOnly || exercise.isFavorite  // ✅ Add this
+
+            return matchesSearch && matchesMuscle && matchesFavorites
+        }
+    }
+
+    func isExerciseFavorited(_ exercise: Exercise) -> Bool {
+        exercise.isFavorite
+    }
+
+    func toggleFavorite(for exercise: Exercise) {
+        guard let index = exercises.firstIndex(where: { $0.id == exercise.id }) else { return }
+        exercises[index].isFavorite.toggle()
+        applyFilters() // keep filteredExercises in sync
+    }
+
+    func loadExercises(muscle: String? = nil, name: String? = nil) async {
         isLoading = true
-        hasError = false
         errorMessage = nil
+        
+        print("📋 Full Info.plist dump:")
+        Bundle.main.infoDictionary?.forEach { print("   \($0.key): \($0.value)") }
+        print("🏋️ loadExercises called — muscle: \(muscle ?? "nil"), name: \(name ?? "nil")")
 
         do {
-            exercises = try await exerciseService.fetchExercises(
-                muscle: selectedMuscle,
-                name: searchText.isEmpty ? nil : searchText
-            )
+            exercises = try await exerciseService.fetchExercises(muscle: muscle, name: name)
+            print("✅ Loaded \(exercises.count) exercises")
+            applyFilters()
+            print("✅ Filtered to \(filteredExercises.count) exercises")
         } catch let error as NetworkError {
-            hasError = true
-            errorMessage = error.localizedDescription
-            exercises = []
+            errorMessage = error.errorDescription
+            print("❌ NetworkError: \(error.errorDescription ?? "unknown")")
         } catch {
-            hasError = true
-            errorMessage = "Failed to load exercises: \(error.localizedDescription)"
-            exercises = []
+            errorMessage = "Unexpected error: \(error.localizedDescription)"
+            print("❌ Unknown error: \(error)")
         }
 
         isLoading = false
     }
-    
-    var filteredExercises: [Exercise] {
-        if showingFavoritesOnly {
-            return favoriteExercises
-        } else {
-            if let muscle = selectedMuscle, !muscle.isEmpty {
-                return exercises.filter { $0.muscle.lowercased() == muscle.lowercased() }
-            }
-            if !searchText.isEmpty {
-                return exercises.filter { $0.name.lowercased().contains(searchText.lowercased()) }
-            }
-            return exercises
-        }
+
+    func refreshFavorites() {
+        showingFavoritesOnly = true
+        applyFilters()
     }
 
-    func addToFavorites(_ exercise: Exercise) {
-            if !isExerciseFavorited(exercise) {
-                favoriteExercises.append(exercise)
-                saveFavorites()
-                objectWillChange.send()
-            }
-        }
 
-    func removeFromFavorites(_ exercise: Exercise) {
-            favoriteExercises.removeAll { $0.name == exercise.name }
-            saveFavorites()
-            objectWillChange.send()
-        }
-
-        func toggleFavorite(_ exercise: Exercise) {
-            if isExerciseFavorited(exercise) {
-                removeFromFavorites(exercise)
-            } else {
-                addToFavorites(exercise)
-            }
-            refreshFavorites()
-        }
-
-        func refreshFavorites() {
-            loadFavorites()
-            objectWillChange.send()
-        }
-
-    func isExerciseFavorited(_ exercise: Exercise) -> Bool {
-        return favoriteExercises.contains { $0.name == exercise.name }
-    }
-
-    private func saveFavorites() {
-        if let encoded = try? JSONEncoder().encode(favoriteExercises) {
-            UserDefaults.standard.set(encoded, forKey: "favoriteExercises")
-            UserDefaults.standard.synchronize()
-
-        }
-    }
-
-    private func loadFavorites() {
-        if let data = UserDefaults.standard.data(forKey: "favoriteExercises"),
-           let decoded = try? JSONDecoder().decode([Exercise].self, from: data) {
-            favoriteExercises = decoded
-        }
-    }
-
-    init() {
-        loadFavorites()
-        Task {
-            await loadExercises()
-        }
-    }
 }

@@ -21,3 +21,4 @@ DerivedData/
 # CocoaPods
 Pods/
 >>>>>>> 4e3985cd4c82750e749cf31527252be1eb771ed5
+*.xcuserstate

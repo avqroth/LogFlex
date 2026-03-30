@@ -32,7 +32,7 @@ struct AddExerciseView: View {
 
                     // Muscle Filter Menu
                     Menu {
-                        Button("All Muscles", action: { viewModel.selectedMuscle = nil })
+                        Button("All Muscles", action: { viewModel.selectedMuscle = "" })
                         ForEach(viewModel.muscleGroups, id: \.self) { muscle in
                             Button(muscle.capitalized) {
                                 viewModel.selectedMuscle = muscle

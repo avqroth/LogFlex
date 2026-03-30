@@ -13,7 +13,7 @@ struct ExerciseCard: View {
     @ObservedObject var viewModel: ExerciseViewModel
 
     var body: some View {
-        NavigationLink(destination: ExerciseDetailView(exercise: exercise, viewModel: ExerciseViewModel())) {
+        NavigationLink(destination: ExerciseDetailView(exercise: exercise, viewModel: viewModel)) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: "dumbbell.fill")
@@ -30,7 +30,7 @@ struct ExerciseCard: View {
 
                 HStack {
                     ExerciseTag(text: exercise.muscle.capitalized, icon: "figure.strengthtraining.traditional")
-                    ExerciseTag(text: exercise.equipment.capitalized, icon: "gym.bag.fill")
+                    ExerciseTag(text: (exercise.equipment ?? "No equipment").capitalized, icon: "gym.bag.fill")
                 }
             }
             .padding()

@@ -45,11 +45,11 @@ struct ContentView: View {
 //                        .font(.custom("Avenir.bold", size: 22))
 //                }
 
-            NutritionView()
-                .tabItem {
-                    Label("Nutrition", systemImage: "fork.knife.circle")
-                        .font(.custom("Avenir.bold", size: 18))
-                }
+//            NutritionView()
+//                .tabItem {
+//                    Label("Nutrition", systemImage: "fork.knife.circle")
+//                        .font(.custom("Avenir.bold", size: 18))
+//                }
         }
         .accentColor(Color.main)
     }

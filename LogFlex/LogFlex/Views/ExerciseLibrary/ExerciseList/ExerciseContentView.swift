@@ -36,10 +36,13 @@ struct ExerciseContentView: View {
                 }
             }
             .onChange(of: viewModel.searchText) { _ in
-                Task { await viewModel.loadExercises() }
+                viewModel.applyFilters()
             }
             .onChange(of: viewModel.selectedMuscle) { _ in
-                Task { await viewModel.loadExercises() }
+                viewModel.applyFilters()
+            }
+            .task {
+                await viewModel.loadExercises()
             }
         }
     }

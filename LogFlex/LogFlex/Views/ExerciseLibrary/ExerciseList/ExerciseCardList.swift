@@ -12,9 +12,9 @@ struct ExerciseCardList: View {
 
     var body: some View {
         LazyVStack(spacing: 12) {
-            ForEach(viewModel.filteredExercises) { exercise in
+            ForEach($viewModel.filteredExercises) { $exercise in  // ✅ $exercise is Binding<Exercise>
                 ExerciseCard(exercise: exercise, viewModel: viewModel)
-                    .id("\(exercise.id)-\(viewModel.isExerciseFavorited(exercise))") 
+                    .id("\(exercise.id)-\(exercise.isFavorite)")  // ✅ access via unwrapped exercise
             }
         }
     }

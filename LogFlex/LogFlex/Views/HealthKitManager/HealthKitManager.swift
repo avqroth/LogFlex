@@ -375,11 +375,15 @@ extension HealthKitManager {
             anchor: nil,
             limit: HKObjectQueryNoLimit
         ) { [weak self] query, samples, deletedObjects, anchor, error in
-            self?.handleDistanceUpdate(samples)
+            Task {
+                await self?.handleDistanceUpdate(samples)
+            }
         }
 
         query.updateHandler = { [weak self] query, samples, deleted, anchor, error in
-            self?.handleDistanceUpdate(samples)
+            Task {
+                await self?.handleDistanceUpdate(samples)
+            }
         }
 
         distanceQuery = query
@@ -396,18 +400,17 @@ extension HealthKitManager {
         distanceQuery = nil
     }
 
-    private func handleDistanceUpdate(_ samples: [HKSample]?) {
+    private func handleDistanceUpdate(_ samples: [HKSample]?) async {
         guard let distanceSamples = samples as? [HKQuantitySample] else { return }
 
         let totalDistance = distanceSamples.reduce(0.0) { result, sample in
             result + sample.quantity.doubleValue(for: .meter())
         }
 
-        DispatchQueue.main.async {
+        await MainActor.run {
             self.activeWorkoutDistance = totalDistance / 1609.34
         }
     }
-
     private func distanceTypeFor(workoutType: HKWorkoutActivityType) -> HKQuantityType? {
         switch workoutType {
         case .running, .walking:

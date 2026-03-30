@@ -23,7 +23,7 @@ struct ExerciseDetailView: View {
                         GridItem(.flexible())
                     ], spacing: 16) {
                         InfoCard(title: "Muscle", value: exercise.muscle, icon: "figure.strengthtraining.traditional")
-                        InfoCard(title: "Equipment", value: exercise.equipment, icon: "dumbbell.fill")
+                        InfoCard(title: "Equipment", value: exercise.equipment ?? "No Equipment", icon: "dumbbell.fill")
                         InfoCard(title: "Type", value: exercise.type, icon: "figure.run")
                         InfoCard(title: "Difficulty", value: exercise.difficulty, icon: "chart.bar.fill")
                     }
