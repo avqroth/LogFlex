@@ -406,7 +406,7 @@
 		855CD4AC2CA35C100033A710 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				API_NINJA_KEY = $(API_NINJA_KEY);
+				API_NINJA_KEY = ctrEEi8MDHCDtVAcoT5ZxQsPqRtOmQeoXGuga3Yn;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LogFlex/LogFlex.entitlements;
@@ -441,7 +441,7 @@
 		855CD4AD2CA35C100033A710 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				API_NINJA_KEY = $(API_NINJA_KEY);
+				API_NINJA_KEY = ctrEEi8MDHCDtVAcoT5ZxQsPqRtOmQeoXGuga3Yn;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = LogFlex/LogFlex.entitlements;
