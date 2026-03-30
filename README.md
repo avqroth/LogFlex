@@ -26,3 +26,13 @@ A native iOS fitness tracking app built with Swift and SwiftUI.
 - iOS 16.0+
 - Xcode 15+
 - iPhone with HealthKit support
+
+ 
+ ## API Key Setup
+This project reads the API key from Xcode Build Settings via `$(API_NINJA_KEY)`.
+To run locally, add `API_NINJA_KEY` as a User-Defined Setting in Build Settings
+with your API-Ninjas key as the value.
+
+## Security Note
+The API key is injected at build time and never stored in source code or git history.
+In production this would be replaced with a backend proxy.
