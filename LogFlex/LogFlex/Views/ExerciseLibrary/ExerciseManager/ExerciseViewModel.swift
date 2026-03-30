@@ -70,10 +70,6 @@ class ExerciseViewModel: ObservableObject {
     func loadExercises(muscle: String? = nil, name: String? = nil) async {
         isLoading = true
         errorMessage = nil
-        
-        print("📋 Full Info.plist dump:")
-        Bundle.main.infoDictionary?.forEach { print("   \($0.key): \($0.value)") }
-        print("🏋️ loadExercises called — muscle: \(muscle ?? "nil"), name: \(name ?? "nil")")
 
         do {
             exercises = try await exerciseService.fetchExercises(muscle: muscle, name: name)
